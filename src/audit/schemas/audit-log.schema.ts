@@ -1,0 +1,1 @@
+export interface AuditLog { eventType: string; userId?: string; clientApp?: string; ip?: string; userAgent?: string; status: 'success' | 'failed' | 'info'; metadata?: Record<string, unknown>; requestId?: string; createdAt: Date; }

@@ -1,0 +1,18 @@
+{
+  "issuerEnv": "OIDC_ISSUER",
+  "routes": {
+    "authorization": "/oauth/authorize",
+    "token": "/oauth/token",
+    "userinfo": "/oauth/userinfo",
+    "jwks": "/oauth/jwks",
+    "introspection": "/oauth/introspect",
+    "revocation": "/oauth/revoke",
+    "end_session": "/oauth/logout"
+  },
+  "features": {
+    "devInteractions": false,
+    "introspection": true,
+    "revocation": true,
+    "rpInitiatedLogout": true
+  }
+}

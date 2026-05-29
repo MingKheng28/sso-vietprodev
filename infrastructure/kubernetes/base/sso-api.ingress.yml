@@ -1,0 +1,4 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: sso-api }
+spec: { rules: [{ host: sso.example.com, http: { paths: [{ path: /, pathType: Prefix, backend: { service: { name: sso-api, port: { number: 80 } } } }] } }] }

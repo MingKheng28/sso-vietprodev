@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: {{ include "sso-api.fullname" . | default "sso-api" }} }
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector: { matchLabels: { app: sso-api } }
+  template:
+    metadata: { labels: { app: sso-api } }
+    spec:
+      serviceAccountName: sso-api
+      containers:
+        - name: sso-api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports: [{ containerPort: 3000 }]
+          envFrom: [{ configMapRef: { name: sso-api-config } }, { secretRef: { name: sso-api-secret } }]

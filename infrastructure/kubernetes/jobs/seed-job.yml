@@ -1,0 +1,4 @@
+apiVersion: batch/v1
+kind: Job
+metadata: { name: sso-seed }
+spec: { template: { spec: { restartPolicy: Never, containers: [{ name: seed, image: sso-api:0.1.0, command: ['npm','run','seed'] }] } } }

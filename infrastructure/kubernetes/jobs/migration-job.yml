@@ -1,0 +1,4 @@
+apiVersion: batch/v1
+kind: Job
+metadata: { name: sso-migration }
+spec: { template: { spec: { restartPolicy: Never, containers: [{ name: migration, image: sso-api:0.1.0, command: ['npm','run','migration:run'] }] } } }

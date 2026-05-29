@@ -1,0 +1,4 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: sso-api-config }
+data: { NODE_ENV: production, PORT: '3000' }

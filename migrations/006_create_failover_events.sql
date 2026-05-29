@@ -1,0 +1,2 @@
+CREATE TABLE IF NOT EXISTS db_connections (id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), name TEXT UNIQUE NOT NULL, provider TEXT NOT NULL, role TEXT, connection_string_env TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS failover_events (id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), event_type TEXT NOT NULL, old_primary TEXT, new_primary TEXT, reason TEXT, metadata JSONB, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());

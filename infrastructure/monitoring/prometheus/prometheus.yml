@@ -1,0 +1,4 @@
+scrape_configs:
+  - job_name: sso-api
+    metrics_path: /metrics
+    static_configs: [{ targets: ['sso-api:3000'] }]

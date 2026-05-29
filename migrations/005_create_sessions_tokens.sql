@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS sessions (id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), user_id UUID NOT NULL REFERENCES users(id), user_agent TEXT, ip INET, expires_at TIMESTAMPTZ, revoked_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS refresh_tokens (id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), user_id UUID NOT NULL REFERENCES users(id), token_hash TEXT NOT NULL UNIQUE, session_id UUID REFERENCES sessions(id), expires_at TIMESTAMPTZ NOT NULL, revoked_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS oidc_grants (model TEXT NOT NULL, id TEXT NOT NULL, payload JSONB NOT NULL, expires_at TIMESTAMPTZ, consumed_at TIMESTAMPTZ, PRIMARY KEY(model,id));
+CREATE INDEX IF NOT EXISTS idx_oidc_grants_expires_at ON oidc_grants(expires_at);
