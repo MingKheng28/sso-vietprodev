@@ -408,7 +408,74 @@ Kỳ vọng:
 - Trả thông tin user nội bộ của Demo B.
 - Session Demo B độc lập với session Demo A.
 
-## 14. Kịch bản lỗi cần test
+## 14. Swagger UI - Test API bằng giao diện
+
+Cả Demo A và Demo B đã được tích hợp Swagger UI. Đây là cách test API tốt nhất thay vì dùng browser trực tiếp.
+
+### Mở Swagger UI
+
+| Project | Swagger URL |
+|---------|-----------|
+| Demo A | `http://localhost:3001/docs` |
+| Demo B | `http://localhost:3002/docs` |
+
+### Cách test SSO flow qua Swagger
+
+**Bước 1:** Mở `http://localhost:3001/docs` trên trình duyệt.
+
+**Bước 2:** Trong Swagger UI, tìm section **Auth - SSO**, click **GET /auth/sso/start**, click **Try it out**, rồi click **Execute**.
+
+Swagger sẽ gửi request và hiển thị:
+- **Response Code**: `302` (Redirect)
+- **Response Headers**: `Location` chứa URL SSO authorize
+
+**Bước 3:** Copy URL từ `Location` header (hoặc click link trong Swagger response nếu có).
+
+**Bước 4:** Dán URL vào trình duyệt mới (hoặc tab mới trong cùng trình duyệt). Trình duyệt sẽ redirect đến trang login SSO.
+
+**Bước 5:** Đăng nhập bằng:
+```
+Email: admin@sso.local
+Password: ChangeMeAdmin123!
+```
+
+**Bước 6:** Sau khi login, SSO redirect về Demo A callback URL. Trình duyệt sẽ hiển thị JSON response chứa thông tin user.
+
+**Bước 7:** Copy giá trị `access_token` từ cookie (mở DevTools → Application → Cookies → localhost:3001 → access_token).
+
+**Bước 8:** Quay lại Swagger UI, click **GET /auth/me**, click **Try it out**, paste `access_token` vào ô **Authorization** (dạng: `Bearer <token>`), click **Execute**.
+
+**Kỳ vọng**: Response 200 với thông tin user.
+
+### Ưu điểm của Swagger so với browser
+
+| Browser trực tiếp | Swagger UI |
+|---|---|
+| Cookie không persist giữa redirects | Giữ auth state qua `persistAuthorization` |
+| Khó copy token/cookie | Copy/paste dễ dàng |
+| Không hiển thị request/response chi tiết | Full request/response details |
+| Không phân biệt environments | Mỗi project 1 Swagger riêng |
+
+### Restart sau khi cài Swagger
+
+Nếu demo project đang chạy, cần restart để nhận Swagger:
+
+1. Tắt terminal đang chạy Demo A/B (Ctrl+C)
+2. Chạy lại:
+
+```cmd
+cd demo-projects\demo-project-a-api
+npm run start:dev
+```
+
+Mở tab mới:
+
+```cmd
+cd demo-projects\demo-project-b-api
+npm run start:dev
+```
+
+## 15. Kịch bản lỗi cần test
 
 | Tình huống | Kỳ vọng |
 |---|---|
@@ -419,7 +486,7 @@ Kỳ vọng:
 | Logout Demo A | Session Demo A bị deactivate, Demo B không bị ảnh hưởng |
 | SSO session hết hạn | Demo B redirect sang SSO và yêu cầu login lại |
 
-## 15. Kiểm tra build/typecheck hiện tại
+## 16. Kiểm tra build/typecheck hiện tại
 
 Các lệnh đã pass trong giai đoạn scaffold:
 
@@ -435,7 +502,7 @@ npm run build
 
 ở root SSO project.
 
-## 16. Kết quả dùng để xin duyệt Project thật
+## 17. Kết quả dùng để xin duyệt Project thật
 
 Sau khi demo pass, cần ghi lại:
 
@@ -445,7 +512,7 @@ Sau khi demo pass, cần ghi lại:
 - DB `user_sessions` của Demo A và Demo B chứng minh session nội bộ riêng.
 - Code callback Resource object để làm mẫu áp dụng cho Project A/B thật.
 
-## 17. Nguyên tắc không được vi phạm
+## 18. Nguyên tắc không được vi phạm
 
 - Không dùng DB thật Project A/B trong demo nếu chưa được phê duyệt.
 - Không copy secret thật của Project A/B.

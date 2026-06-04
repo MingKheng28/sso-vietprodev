@@ -1036,7 +1036,76 @@ Sau khi sửa, chạy lại:
 npm run start:dev
 ```
 
-### 25.11. Lỗi `EADDRINUSE: address already in use :::3000`
+### 25.11. Lỗi TypeScript compilation khi `npm run start:dev`
+
+Khi chạy dev server, có thể gặp 8 lỗi TypeScript do thay đổi version dependencies. Đây là các lỗi đã được fix trong source code:
+
+**1. Lỗi `Property 'status' does not exist on type '{}'`** (demo projects A/B)
+
+Xảy ra tại `demo-projects/demo-project-*/src/app.ts` và `sso.service.ts`. Axios error response type không có `status` property được TypeScript nhận diện.
+
+Fix: Ép kiểu `e.response` thành `any`:
+
+```ts
+// Trước:
+status: e.status ?? e.response?.status,
+
+// Sau:
+status: e.status ?? (e.response as any)?.status,
+```
+
+**2. Lỗi `Property 'intervalHandle' has no initializer`**
+
+Xảy ra tại `src/audit/audit-logger.service.ts`. TypeScript strict mode yêu cầu property phải được khởi tạo.
+
+Fix: Dùng definite assignment assertion:
+
+```ts
+// Trước:
+private intervalHandle: NodeJS.Timeout;
+
+// Sau:
+private intervalHandle!: NodeJS.Timeout;
+```
+
+**3. Lỗi `'"@nestjs/common"' has no exported member named 'TooManyRequestsException'`**
+
+Xảy ra tại `src/auth/auth.service.ts`. NestJS version hiện tại không export `TooManyRequestsException`.
+
+Fix: Thay bằng `BadRequestException`:
+
+```ts
+// Trước:
+import { Injectable, UnauthorizedException, TooManyRequestsException } from '@nestjs/common';
+throw new TooManyRequestsException('...');
+
+// Sau:
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+throw new BadRequestException('...');
+```
+
+**4. Lỗi `Argument of type '(err: Error | undefined) => ...' is not assignable to parameter of type 'NextFunction'`**
+
+Xảy ra tại `src/main.ts` và `src/security/csrf.middleware.ts`. TypeScript strict mode yêu cầu error handler của Express middleware phải nhận `unknown` thay vì `Error | undefined`.
+
+Fix:
+
+```ts
+// Trước:
+csrfProtection(req, res, (err: Error | undefined) => {
+
+// Sau:
+csrfProtection(req, res, (err: unknown) => {
+```
+
+Sau khi fix tất cả, chạy lại:
+
+```cmd
+npm run typecheck
+npm run start:dev
+```
+
+### 25.12. Lỗi `EADDRINUSE: address already in use :::3000`
 
 Lỗi này nghĩa là port `3000` đã có một process khác đang dùng. Trường hợp thường gặp nhất là bạn đã có một terminal khác đang chạy `npm run start:dev` rồi, sau đó mở thêm terminal và chạy lại lần nữa.
 

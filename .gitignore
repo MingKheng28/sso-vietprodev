@@ -4,8 +4,17 @@ coverage
 .env
 .env.*
 !.env.example
-secrets/*.json
+
+# Secrets directory
+secrets/
+!secrets/
 !secrets/.gitkeep
 !secrets/README.md
+# Allow public JWKS JSON in git (dev only - commit public keys, never private)
+!secrets/oidc-jwks.json
+
 npm-debug.log*
 .DS_Store
+
+# CodeGraph - local knowledge graph index (100% local, per-machine)
+.codegraph/

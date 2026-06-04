@@ -1,12 +1,232 @@
 services:
+  # ============================================================
+  # etcd cluster - distributed consensus store for Patroni
+  # ============================================================
   etcd1:
     image: quay.io/coreos/etcd:v3.5.15
-    command: etcd --name etcd1 --data-dir /etcd-data --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://etcd1:2379
+    container_name: etcd1
+    hostname: etcd1
+    environment:
+      - ETCD_NAME=etcd1
+      - ETCD_DATA_DIR=/etcd-data
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_INITIAL_CLUSTER=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      - ETCD_INITIAL_CLUSTER_TOKEN=sso-ha-cluster
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd1:2379
+    ports:
+      - '2379:2379'
+    volumes:
+      - etcd1-data:/etcd-data
+    networks:
+      - sso-ha-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "etcdctl", "--endpoints=http://localhost:2379", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  etcd2:
+    image: quay.io/coreos/etcd:v3.5.15
+    container_name: etcd2
+    hostname: etcd2
+    environment:
+      - ETCD_NAME=etcd2
+      - ETCD_DATA_DIR=/etcd-data
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_INITIAL_CLUSTER=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      - ETCD_INITIAL_CLUSTER_TOKEN=sso-ha-cluster
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd2:2379
+    ports:
+      - '2380:2379'
+    volumes:
+      - etcd2-data:/etcd-data
+    networks:
+      - sso-ha-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "etcdctl", "--endpoints=http://localhost:2379", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  etcd3:
+    image: quay.io/coreos/etcd:v3.5.15
+    container_name: etcd3
+    hostname: etcd3
+    environment:
+      - ETCD_NAME=etcd3
+      - ETCD_DATA_DIR=/etcd-data
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_INITIAL_CLUSTER=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      - ETCD_INITIAL_CLUSTER_TOKEN=sso-ha-cluster
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd3:2379
+    volumes:
+      - etcd3-data:/etcd-data
+    networks:
+      - sso-ha-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "etcdctl", "--endpoints=http://localhost:2379", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # PostgreSQL nodes managed by Patroni
+  # ============================================================
+  postgres1:
+    image: postgres:16
+    container_name: postgres1
+    hostname: postgres1
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_root_password
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres1-data:/var/lib/postgresql/data
+      - ./infrastructure/postgres-ha/patroni/postgres1.yml:/etc/patroni.yml:ro
+    command: patroni /etc/patroni.yml
+    depends_on:
+      etcd1:
+        condition: service_healthy
+      etcd2:
+        condition: service_healthy
+      etcd3:
+        condition: service_healthy
+    networks:
+      - sso-ha-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres2:
+    image: postgres:16
+    container_name: postgres2
+    hostname: postgres2
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_root_password
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres2-data:/var/lib/postgresql/data
+      - ./infrastructure/postgres-ha/patroni/postgres2.yml:/etc/patroni.yml:ro
+    command: patroni /etc/patroni.yml
+    depends_on:
+      etcd1:
+        condition: service_healthy
+      etcd2:
+        condition: service_healthy
+      etcd3:
+        condition: service_healthy
+    networks:
+      - sso-ha-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres3:
+    image: postgres:16
+    container_name: postgres3
+    hostname: postgres3
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_root_password
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres3-data:/var/lib/postgresql/data
+      - ./infrastructure/postgres-ha/patroni/postgres3.yml:/etc/patroni.yml:ro
+    command: patroni /etc/patroni.yml
+    depends_on:
+      etcd1:
+        condition: service_healthy
+      etcd2:
+        condition: service_healthy
+      etcd3:
+        condition: service_healthy
+    networks:
+      - sso-ha-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # HAProxy - routes to PostgreSQL primary (write) and replicas (read)
+  # ============================================================
   haproxy:
     image: haproxy:2.9
-    ports: ['5433:5432','8404:8404']
-    volumes: ['./infrastructure/postgres-ha/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro']
+    container_name: haproxy
+    hostname: haproxy
+    ports:
+      - '5433:5432'  # Primary write endpoint
+      - '5434:5433'  # Replica read endpoint
+      - '8404:8404'  # Stats UI
+    volumes:
+      - ./infrastructure/postgres-ha/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      postgres1:
+        condition: service_healthy
+      postgres2:
+        condition: service_healthy
+      postgres3:
+        condition: service_healthy
+    networks:
+      - sso-ha-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "haproxy", "-c", "-f", "/usr/local/etc/haproxy/haproxy.cfg"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ============================================================
+  # PgBouncer - connection pooling in front of HAProxy
+  # ============================================================
   pgbouncer:
     image: edoburu/pgbouncer:latest
-    ports: ['6432:5432']
-    volumes: ['./infrastructure/postgres-ha/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro','./infrastructure/postgres-ha/pgbouncer/userlist.example.txt:/etc/pgbouncer/userlist.txt:ro']
+    container_name: pgbouncer
+    hostname: pgbouncer
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres_root_password@haproxy:5432/postgres
+      - POOL_MODE=transaction
+      - MAX_CLIENT_CONN=500
+      - DEFAULT_POOL_SIZE=25
+    ports:
+      - '6432:5432'
+    volumes:
+      - ./infrastructure/postgres-ha/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./infrastructure/postgres-ha/pgbouncer/userlist.example.txt:/etc/pgbouncer/userlist.txt:ro
+    depends_on:
+      haproxy:
+        condition: service_started
+    networks:
+      - sso-ha-net
+    restart: unless-stopped
+
+volumes:
+  etcd1-data:
+  etcd2-data:
+  etcd3-data:
+  postgres1-data:
+  postgres2-data:
+  postgres3-data:
+
+networks:
+  sso-ha-net:
+    name: sso-ha-net
+    driver: bridge

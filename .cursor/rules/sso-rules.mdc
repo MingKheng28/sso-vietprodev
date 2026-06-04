@@ -1,0 +1,46 @@
+---
+description: SSO VietProDev project rules and conventions
+alwaysApply: true
+---
+
+# SSO VietProDev Project Rules
+
+## Core Security Rules
+
+- NEVER log passwords, access tokens, refresh tokens, authorization codes, client secrets, or CSRF tokens.
+- NEVER commit `.env` files, private keys, JWKS private keys, or real credentials.
+- ALWAYS use timing-safe authentication: error messages for invalid user and invalid password must be identical.
+- ALWAYS use `@nestjs/throttler` for rate limiting on login and token endpoints.
+- ALWAYS use CSRF protection on login/logout/consent forms via `csurf` middleware.
+- ALWAYS implement account lockout after N failed login attempts (configurable via env vars).
+
+## Code Quality
+
+- Run `npm run lint` and `npm run format` before every commit.
+- All TypeScript must pass `npm run typecheck`.
+- All new code must pass tests (`npm test`).
+- Error handlers MUST sanitize sensitive data in responses (never leak tokens, codes, secrets).
+- No `any` casts without comment explaining why it's necessary.
+- Use `argon2` with `argon2id` type for password hashing.
+
+## OIDC/SSO Rules
+
+- PKCE must use `S256` method, never `plain`.
+- Redirect URIs must be exact match, never wildcard.
+- OIDC discovery endpoints should be used instead of hardcoded URLs (with fallback).
+- All OIDC clients loaded from DB/config, never hardcoded.
+
+## Database Rules
+
+- Migrations must be idempotent: use `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS`.
+- Migrations must be backward compatible: never drop columns in the same release that removes them from app code.
+- All tables must have indexes on frequently queried columns (email, user_id, client_id, created_at).
+- Audit write failures must be retried automatically (not silently swallowed).
+- Production DB connections must go through PgBouncer/HAProxy, never directly to PostgreSQL nodes.
+
+## Demo Project Rules
+
+- Demo projects use `bindResource()` convention in `src/router.ts` (emulates `express-automatic-routes`).
+- Demo project `sso.service.ts` stateStore must have TTL-based cleanup.
+- All error handlers must sanitize OAuth error responses.
+- Mark in-code comments when something is "demo-only" (e.g., in-memory stateStore).
