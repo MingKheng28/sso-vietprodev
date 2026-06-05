@@ -24,7 +24,7 @@ async function bootstrap() {
   const csrfProtection = csurf({
     cookie: { httpOnly: false, sameSite: 'strict' },
     value: (req: any) =>
-      req.body?._csrf || req.headers['x-csrf-token'] || req.headers['x-xsrf-token'],
+      req.body?._csrf ?? req.headers['x-csrf-token'] ?? req.headers['x-xsrf-token'],
   });
   app.use((req: any, res: any, next: any) => {
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
@@ -46,7 +46,7 @@ async function bootstrap() {
       if (err) {
         return res.status(403).json({ message: 'Invalid CSRF token' });
       }
-      next();
+      return next();
     });
   });
 
@@ -70,7 +70,7 @@ async function bootstrap() {
   app.enableCors({ origin: corsOrigins.length ? corsOrigins : true, credentials: true });
   if (globalPrefix) app.setGlobalPrefix(globalPrefix);
 
-  await app.listen(port);
+  void app.listen(port);
 }
 
-bootstrap();
+void bootstrap();

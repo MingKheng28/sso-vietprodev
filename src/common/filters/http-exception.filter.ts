@@ -6,6 +6,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const res = ctx.getResponse();
     const req = ctx.getRequest();
     const accept = (req.headers.accept ?? '').toLowerCase();
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     const wantsHtml = accept.includes('text/html') || accept === '*/*';
     const status =
       exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;

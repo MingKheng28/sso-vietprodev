@@ -40,7 +40,7 @@ export class AuditLoggerService implements OnModuleInit, OnModuleDestroy {
   private enqueue(item: QueuedAuditEvent): void {
     this.queue.push(item);
     if (!this.processing) {
-      this.processQueue();
+      void this.processQueue();
     }
   }
 
@@ -69,7 +69,9 @@ export class AuditLoggerService implements OnModuleInit, OnModuleDestroy {
       } catch (e: any) {
         item.retries++;
         if (item.retries >= MAX_RETRIES) {
-          this.logger.error(`Audit event permanently failed after ${MAX_RETRIES} retries: ${item.event.eventType}`);
+          this.logger.error(
+            `Audit event permanently failed after ${MAX_RETRIES} retries: ${item.event.eventType}`,
+          );
           this.queue.shift();
         } else {
           this.logger.warn(`Audit retry ${item.retries}/${MAX_RETRIES} failed: ${e.message}`);
