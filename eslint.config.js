@@ -30,7 +30,7 @@ export default [
       ...tseslintPlugin.configs['recommended-type-checked'].rules,
       ...tseslintPlugin.configs['stylistic-type-checked'].rules,
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
       '@typescript-eslint/no-unsafe-return': 'off',

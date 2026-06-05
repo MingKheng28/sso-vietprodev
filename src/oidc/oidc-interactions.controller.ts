@@ -85,6 +85,7 @@ export class OidcInteractionsController {
         });
       }
 
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       const derivedUsername = username || email.split('@')[0];
       const existingUsername = await this.users.findByUsername(derivedUsername);
       if (existingUsername) {
@@ -96,7 +97,11 @@ export class OidcInteractionsController {
       }
 
       const passwordHash = await this.passwords.hash(password);
-      const user = await this.users.create({ email, username: derivedUsername, password_hash: passwordHash });
+      const user = await this.users.create({
+        email,
+        username: derivedUsername,
+        password_hash: passwordHash,
+      });
 
       await this.audit.log({
         eventType: AUDIT_EVENTS.REGISTER_SUCCESS,
@@ -115,7 +120,9 @@ export class OidcInteractionsController {
         },
       };
 
-      return this.oidc.instance.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
+      return this.oidc.instance.interactionFinished(req, res, result, {
+        mergeWithLastSubmission: false,
+      });
     } catch (e: any) {
       const isUniqueViolation = e.code === '23505';
       await this.audit.log({
@@ -128,7 +135,9 @@ export class OidcInteractionsController {
 
       return res.status(400).render('register', {
         uid,
-        error: isUniqueViolation ? 'Email hoặc tên đăng nhập đã tồn tại. Vui lòng thử lại.' : 'Không thể tạo tài khoản. Vui lòng thử lại.',
+        error: isUniqueViolation
+          ? 'Email hoặc tên đăng nhập đã tồn tại. Vui lòng thử lại.'
+          : 'Không thể tạo tài khoản. Vui lòng thử lại.',
         csrfToken: req.csrfToken?.() ?? '',
       });
     }
@@ -156,7 +165,9 @@ export class OidcInteractionsController {
         },
       };
 
-      return this.oidc.instance.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
+      return this.oidc.instance.interactionFinished(req, res, result, {
+        mergeWithLastSubmission: false,
+      });
     } catch (e: any) {
       const status = e.getStatus?.() ?? 401;
       const isLockout = status === 429;
@@ -178,10 +189,17 @@ export class OidcInteractionsController {
   }
 
   @Post(':uid/confirm')
-  async confirmConsent(@Param('uid') uid: string, @Body() body: any, @Req() req: any, @Res() res: any) {
+  async confirmConsent(
+    @Param('uid') uid: string,
+    @Body() body: any,
+    @Req() req: any,
+    @Res() res: any,
+  ) {
     const details = await this.oidc.instance.interactionDetails(req, res);
     const result = await this.buildConsentResult(details);
-    return this.oidc.instance.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
+    return this.oidc.instance.interactionFinished(req, res, result, {
+      mergeWithLastSubmission: true,
+    });
   }
 
   @Post(':uid/cancel')
