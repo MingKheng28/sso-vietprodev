@@ -1,8 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { NestExpressApplication } from '@nestjs/platform-express';
-import { ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import helmet from 'helmet';
 import * as compression from 'compression';
@@ -20,14 +18,13 @@ async function bootstrap() {
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(compression());
   app.use(cookieParser(process.env.SESSION_SECRET));
-  app.use(new SecurityHeadersMiddleware().use);
+  const securityMiddleware = new SecurityHeadersMiddleware();
+  app.use((req, res, next) => securityMiddleware.use(req, res, next));
 
   const csrfProtection = csurf({
     cookie: { httpOnly: false, sameSite: 'strict' },
     value: (req: any) =>
-      req.body?._csrf ||
-      req.headers['x-csrf-token'] ||
-      req.headers['x-xsrf-token'],
+      req.body?._csrf || req.headers['x-csrf-token'] || req.headers['x-xsrf-token'],
   });
   app.use((req: any, res: any, next: any) => {
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
@@ -38,7 +35,11 @@ async function bootstrap() {
       return next();
     }
     // OAuth2 token/revoke/introspect endpoints use PKCE/client credentials — skip CSRF
-    if (req.path === '/oauth/token' || req.path === '/oauth/revoke' || req.path === '/oauth/introspect') {
+    if (
+      req.path === '/oauth/token' ||
+      req.path === '/oauth/revoke' ||
+      req.path === '/oauth/introspect'
+    ) {
       return next();
     }
     csrfProtection(req, res, (err: unknown) => {

@@ -13,11 +13,7 @@ export class CsrfMiddleware implements NestMiddleware {
         sameSite: 'strict',
       },
       value: (req: Request) => {
-        return (
-          req.body?._csrf ||
-          req.headers['x-csrf-token'] ||
-          req.headers['x-xsrf-token']
-        );
+        return req.body?._csrf ?? req.headers['x-csrf-token'] ?? req.headers['x-xsrf-token'];
       },
     });
   }
@@ -30,7 +26,7 @@ export class CsrfMiddleware implements NestMiddleware {
       if (err) {
         return next(new HttpException('Invalid CSRF token', HttpStatus.FORBIDDEN));
       }
-      next();
+      return next();
     });
   }
 }

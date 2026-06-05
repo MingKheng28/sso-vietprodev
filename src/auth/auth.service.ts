@@ -13,15 +13,20 @@ export class AuthService {
     private readonly timingSafe: TimingSafeService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<{ id: string; email: string; username: string; status: string }> {
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<{ id: string; email: string; username: string; status: string }> {
     const isLocked = await this.bruteForce.isLockedOut(email);
     if (isLocked) {
-      throw new BadRequestException('Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau 15 phút.');
+      throw new BadRequestException(
+        'Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau 15 phút.',
+      );
     }
 
     const user = await this.users.findByEmail(email);
 
-    if (!user || user.status !== 'active') {
+    if (user?.status !== 'active') {
       await this.bruteForce.checkAndRecord(email, user?.id ?? null, false);
       throw new UnauthorizedException('Thông tin đăng nhập không hợp lệ');
     }

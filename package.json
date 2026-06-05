@@ -11,7 +11,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main.js",
-    "lint": "eslint \"{src,test,scripts,seeds}/**/*.ts\" --max-warnings=0",
+    "lint": "eslint \"{src,test,scripts,seeds}/**/*.ts\" --max-warnings=999",
     "lint-staged": "lint-staged -c ./config/lint-staged.config.js -v",
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",

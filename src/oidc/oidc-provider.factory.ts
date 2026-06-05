@@ -17,21 +17,38 @@ export class OidcProviderFactory {
     const claimsService = this.claims;
 
     return new Provider(this.config.issuer, {
-      adapter: (name) => this.adapter.createAdapter(name) as any,
+      adapter: (name) => this.adapter.createAdapter(name),
       clients: clients.map((client) => this.toProviderClient(client)) as any,
       cookies: { keys: this.config.cookieKeys },
-      claims: { openid: ['sub'], profile: ['name', 'preferred_username'], email: ['email', 'email_verified'] },
+      claims: {
+        openid: ['sub'],
+        profile: ['name', 'preferred_username'],
+        email: ['email', 'email_verified'],
+      },
       async findAccount(_ctx, sub) {
         return {
           accountId: sub,
           async claims(_use, _scope) {
             return claimsService.claims('', sub);
           },
-        } as any;
+        };
       },
       ttl: { AccessToken: this.config.accessTokenTtl, RefreshToken: this.config.refreshTokenTtl },
-      features: { devInteractions: { enabled: false }, introspection: { enabled: true }, revocation: { enabled: true }, rpInitiatedLogout: { enabled: true } },
-      routes: { authorization: '/oauth/authorize', token: '/oauth/token', userinfo: '/oauth/userinfo', jwks: '/oauth/jwks', introspection: '/oauth/introspect', revocation: '/oauth/revoke', end_session: '/oauth/logout' },
+      features: {
+        devInteractions: { enabled: false },
+        introspection: { enabled: true },
+        revocation: { enabled: true },
+        rpInitiatedLogout: { enabled: true },
+      },
+      routes: {
+        authorization: '/oauth/authorize',
+        token: '/oauth/token',
+        userinfo: '/oauth/userinfo',
+        jwks: '/oauth/jwks',
+        introspection: '/oauth/introspect',
+        revocation: '/oauth/revoke',
+        end_session: '/oauth/logout',
+      },
       interactions: { url: (_ctx, interaction) => `/oidc/interaction/${interaction.uid}` },
     });
   }
