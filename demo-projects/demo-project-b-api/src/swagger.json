@@ -1,0 +1,365 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Demo Project B API",
+    "description": "Demo Project B API - Multi-Project SSO Authentication Demo",
+    "version": "0.1.0",
+    "contact": {
+      "name": "SSO VietProDev Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3002",
+      "description": "Demo Project B Local"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "API health and status"
+    },
+    {
+      "name": "Auth - Local",
+      "description": "Local authentication (direct login, no SSO)"
+    },
+    {
+      "name": "Auth - SSO",
+      "description": "SSO authentication via centralized SSO server"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "API root",
+        "description": "Returns basic API info",
+        "responses": {
+          "200": {
+            "description": "API info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "app": { "type": "string", "example": "demo-project-b-api" },
+                    "appCode": { "type": "string", "example": "DEMO_PROJECT_B" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "description": "Returns API health status with app info and timestamp",
+        "responses": {
+          "200": {
+            "description": "Health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" },
+                    "app": { "type": "string", "example": "demo-project-b-api" },
+                    "appCode": { "type": "string", "example": "DEMO_PROJECT_B" },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth - Local"],
+        "summary": "Local demo login (project DB only)",
+        "description": "**Demo/testing only.** Searches the local project database by email and creates a local session. This does NOT authenticate against the SSO server — use the browser SSO flow for real SSO login.\n\n**Usage:** After calling this endpoint, the API sets `access_token` and `refresh_token` HttpOnly cookies automatically. The browser automatically sends them on subsequent requests.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email of an existing user in the local project database (e.g. users created via SSO login)",
+                    "example": "sso-user@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful. Sets `access_token` and `refresh_token` HttpOnly cookies automatically.",
+            "headers": {
+              "Set-Cookie": {
+                "description": "HttpOnly cookies: `access_token` (15min TTL), `refresh_token` (30-day TTL)"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": { "$ref": "#/components/schemas/UserResponse/properties/user" },
+                    "authMode": { "type": "string", "example": "local-demo", "description": "Always 'local-demo' for this endpoint" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No user found with this email in the local project database. Note: This does NOT check the SSO server.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sso/start": {
+      "get": {
+        "tags": ["Auth - SSO"],
+        "summary": "Start SSO login flow (browser-only — not testable via Swagger)",
+        "description": "**Browser-only — cannot be tested via Swagger UI.**\n\nRedirects the user to the SSO server for authentication. After login, the SSO server redirects back to `/auth/sso/callback`.\n\nTo test:\n1. Open `http://localhost:3002/auth/sso/start` in a **browser**\n2. Complete the SSO login flow\n3. After callback, the browser will be authenticated automatically\n\nFor quick API testing, use `POST /auth/login` instead.",
+        "responses": {
+          "302": {
+            "description": "Redirect to SSO server",
+            "headers": {
+              "Location": {
+                "description": "SSO authorization URL with PKCE parameters",
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sso/callback": {
+      "get": {
+        "tags": ["Auth - SSO"],
+        "summary": "SSO callback (browser-only — not testable via Swagger)",
+        "description": "**Browser-only — cannot be tested via Swagger UI.**\n\nThis endpoint is only reached when the SSO server redirects the user's browser back after login. The URL looks like:\n```\nGET /auth/sso/callback?code=<authorization_code>&state=<csrf_token>&iss=http://localhost:3000\n```\n\nTo test the full SSO flow:\n1. Open `http://localhost:3002/auth/sso/start` in a **browser**\n2. Login at the SSO server\n3. The browser is automatically redirected here with `code` and `state`\n4. The API exchanges the code for tokens and sets HttpOnly cookies\n\nFor quick API testing, use `POST /auth/login` instead.",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "description": "Authorization code from SSO",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "description": "State parameter for CSRF protection",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SSO login successful. Redirected from SSO after successful authentication.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "SSO login success" },
+                    "appCode": { "type": "string", "example": "DEMO_PROJECT_B" },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "email": { "type": "string" },
+                        "username": { "type": "string" },
+                        "firstName": { "type": "string" },
+                        "lastName": { "type": "string" },
+                        "status": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid state, expired code, or token exchange failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "examples": {
+                  "invalidState": { "value": { "message": "Invalid or expired state" } },
+                  "tokenExchangeFailed": { "value": { "message": "Request failed with status code 403", "status": 403 } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Auth - Local", "Auth - SSO"],
+        "summary": "Get current user",
+        "description": "Returns the currently authenticated user. Requires either Bearer token in Authorization header or access_token cookie.",
+        "security": [{ "BearerAuth": [] }, { "CookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Current user info",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "message": "Missing access token" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth - Local", "Auth - SSO"],
+        "summary": "Refresh access token",
+        "description": "Uses the refresh_token cookie to obtain a new access token.",
+        "responses": {
+          "200": {
+            "description": "Token refreshed successfully.",
+            "headers": {
+              "Set-Cookie": {
+                "description": "HttpOnly cookies: access_token, refresh_token"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean", "example": true },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "email": { "type": "string" },
+                        "username": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid refresh token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth - Local", "Auth - SSO"],
+        "summary": "Logout",
+        "description": "Deactivates the current session and clears auth cookies.",
+        "security": [{ "BearerAuth": [] }, { "CookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Logged out successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean", "example": true }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT access token from SSO login. Pass as: `Authorization: Bearer <token>`"
+      },
+      "CookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "access_token",
+        "description": "HttpOnly cookie containing JWT access token. Set automatically after successful login."
+      }
+    },
+    "schemas": {
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid", "description": "User ID" },
+              "email": { "type": "string", "format": "email", "description": "User email" },
+              "username": { "type": "string", "description": "Username", "nullable": true },
+              "firstName": { "type": "string", "description": "First name", "nullable": true },
+              "lastName": { "type": "string", "description": "Last name", "nullable": true },
+              "status": { "type": "string", "enum": ["active", "inactive", "suspended", "pending_verification"], "description": "Account status" }
+            }
+          },
+          "authMode": {
+            "type": "string",
+            "enum": ["local-demo", "sso"],
+            "description": "Only present on local demo login",
+            "example": "local-demo",
+            "nullable": true
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "description": "Human-readable error message" },
+          "status": { "type": "integer", "description": "HTTP status code (may be present on SSO errors)" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Tạo tài khoản - SSO VietProDev</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/login.css">
+  <link rel="stylesheet" href="/public/css/register.css">
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="card">
+      <div class="card-header">
+        <img src="/public/assets/logo.svg" alt="SSO VietProDev" class="card-logo" onerror="this.style.display='none'">
+        <div class="card-logo-text">
+          <h1>Tạo tài khoản SSO</h1>
+        </div>
+        <p class="card-subtitle">Đăng ký một lần, sử dụng cho nhiều ứng dụng VietProDev.</p>
+      </div>
+
+      <div class="alert alert-info">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Tài khoản này dùng chung cho tất cả ứng dụng được kết nối SSO của VietProDev.</span>
+      </div>
+
+      {{#if error}}
+      <div class="alert alert-error" id="server-error" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <span>{{error}}</span>
+      </div>
+      {{/if}}
+
+      <form method="POST" action="/oidc/interaction/{{uid}}/register" data-register-form novalidate>
+        <input type="hidden" name="_csrf" value="{{csrfToken}}">
+
+        <div class="form-group">
+          <label for="email">
+            Email
+            <span class="label-required">Bắt buộc</span>
+          </label>
+          <div class="input-wrapper">
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              autocomplete="email"
+              placeholder="email@example.com"
+              inputmode="email"
+              value="{{email}}"
+              data-preserve
+            >
+            <span class="input-status-icon" id="email-status"></span>
+          </div>
+          <div class="field-error" id="email-error" role="alert"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="username">
+            Tên đăng nhập
+            <span class="optional">(tùy chọn)</span>
+          </label>
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="username"
+              name="username"
+              autocomplete="nickname"
+              placeholder="Tên hiển thị hoặc nickname"
+              maxlength="100"
+              value="{{username}}"
+              data-preserve
+            >
+            <span class="input-status-icon" id="username-status"></span>
+          </div>
+          <div class="field-hint">Nếu bỏ trống, hệ thống sẽ dùng phần trước @ của email.</div>
+          <div class="field-error" id="username-error" role="alert"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">
+            Mật khẩu
+            <span class="label-required">Bắt buộc</span>
+          </label>
+          <div class="input-wrapper">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              autocomplete="new-password"
+              placeholder="Nhập mật khẩu"
+              minlength="12"
+            >
+            <button type="button" class="input-suffix toggle-password" data-target="#password" aria-label="Hiện mật khẩu">
+              <svg class="icon-eye" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icon-eye-off" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+
+          <!-- Password checklist -->
+          <div class="password-checklist" id="password-checklist" aria-label="Tiêu chuẩn mật khẩu">
+            <div class="checklist-header">Mật khẩu phải có:</div>
+            <div class="checklist-items">
+              <div class="check-item" data-rule="length" id="rule-length">
+                <span class="check-icon"></span>
+                <span class="check-text">Tối thiểu <strong>12 ký tự</strong></span>
+              </div>
+              <div class="check-item" data-rule="uppercase" id="rule-uppercase">
+                <span class="check-icon"></span>
+                <span class="check-text">Ít nhất <strong>1 chữ hoa</strong> (A-Z)</span>
+              </div>
+              <div class="check-item" data-rule="lowercase" id="rule-lowercase">
+                <span class="check-icon"></span>
+                <span class="check-text">Ít nhất <strong>1 chữ thường</strong> (a-z)</span>
+              </div>
+              <div class="check-item" data-rule="number" id="rule-number">
+                <span class="check-icon"></span>
+                <span class="check-text">Ít nhất <strong>1 chữ số</strong> (0-9)</span>
+              </div>
+              <div class="check-item" data-rule="special" id="rule-special">
+                <span class="check-icon"></span>
+                <span class="check-text">Ít nhất <strong>1 ký tự đặc biệt</strong> (!@#$...)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Password strength bar -->
+          <div class="password-strength" id="password-strength">
+            <div class="strength-track">
+              <div class="strength-fill" id="strength-fill"></div>
+            </div>
+            <span class="strength-text" id="strength-text">Nhập mật khẩu</span>
+          </div>
+
+          <div class="field-error" id="password-error" role="alert"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">
+            Xác nhận mật khẩu
+            <span class="label-required">Bắt buộc</span>
+          </label>
+          <div class="input-wrapper">
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              required
+              autocomplete="new-password"
+              placeholder="Nhập lại mật khẩu"
+            >
+            <button type="button" class="input-suffix toggle-password" data-target="#confirmPassword" aria-label="Hiện mật khẩu">
+              <svg class="icon-eye" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icon-eye-off" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+          <div class="field-error" id="confirmPassword-error" role="alert"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-register" id="submit-btn">
+          <span class="btn-text">Tạo tài khoản</span>
+          <span class="btn-spinner" aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <div class="link-row">
+        <a href="/oidc/interaction/{{uid}}">Đã có tài khoản? Đăng nhập</a>
+      </div>
+
+      <div class="card-footer">
+        Bằng việc tạo tài khoản, bạn đồng ý với các điều khoản sử dụng và chính sách bảo mật của VietProDev.
+      </div>
+    </div>
+  </div>
+  <script src="/public/js/register.js"></script>
+</body>
+</html>

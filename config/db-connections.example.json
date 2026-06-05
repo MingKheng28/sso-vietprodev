@@ -1,0 +1,42 @@
+{
+  "ssoLogin": {
+    "primary": {
+      "name": "sso_login_ha_endpoint",
+      "provider": "postgresql",
+      "connectionStringEnv": "SSO_LOGIN_PRIMARY_URL",
+      "role": "primary",
+      "notes": "Production must point to PgBouncer/HAProxy endpoint, not a single PostgreSQL node."
+    },
+    "backup": {
+      "name": "sso_login_backup_compat",
+      "provider": "postgresql",
+      "connectionStringEnv": "SSO_LOGIN_BACKUP_URL",
+      "role": "backup",
+      "notes": "Compatibility fallback for dev/test; production failover is handled by Patroni/HAProxy/PgBouncer."
+    }
+  },
+  "projects": [
+    {
+      "appCode": "PROJECT_A",
+      "provider": "postgresql",
+      "connectionStringEnv": "PROJECT_A_DATABASE_URL",
+      "userTable": "users",
+      "userIdColumn": "id",
+      "emailColumn": "email"
+    },
+    {
+      "appCode": "PROJECT_B",
+      "provider": "postgresql",
+      "connectionStringEnv": "PROJECT_B_DATABASE_URL",
+      "userTable": "users",
+      "userIdColumn": "id",
+      "emailColumn": "email",
+      "jsonProfileColumn": "profile"
+    }
+  ],
+  "audit": {
+    "provider": "mongodb",
+    "connectionStringEnv": "MONGODB_AUDIT_URL",
+    "database": "sso_audit"
+  }
+}

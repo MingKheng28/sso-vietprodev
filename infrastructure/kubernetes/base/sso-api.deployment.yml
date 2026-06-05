@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: sso-api }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: sso-api } }
+  template:
+    metadata: { labels: { app: sso-api } }
+    spec:
+      containers:
+        - name: sso-api
+          image: sso-api:0.1.0
+          ports: [{ containerPort: 3000 }]
+          envFrom: [{ secretRef: { name: sso-api-secret } }, { configMapRef: { name: sso-api-config } }]
+          readinessProbe: { httpGet: { path: /health/ready, port: 3000 } }
+          livenessProbe: { httpGet: { path: /health/live, port: 3000 } }
+          resources: { requests: { cpu: 100m, memory: 256Mi }, limits: { cpu: 500m, memory: 512Mi } }
+          securityContext: { runAsNonRoot: true, allowPrivilegeEscalation: false }

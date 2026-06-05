@@ -1,0 +1,28 @@
+replicaCount: 2
+image:
+  repository: ghcr.io/CHANGE_ME_OWNER/sso-api
+  tag: 0.1.0
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 80
+ingress:
+  enabled: true
+  className: nginx
+  host: sso.example.com
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+env:
+  NODE_ENV: production
+  PORT: '3000'
+secret:
+  create: false
+resources:
+  requests: { cpu: 100m, memory: 256Mi }
+  limits: { cpu: 500m, memory: 512Mi }
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80

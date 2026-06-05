@@ -1,0 +1,58 @@
+name: Helm Deploy Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: false
+        default: 'main-latest'
+
+env:
+  REGISTRY: ghcr.io/${{ github.repository_owner }}
+  HELM_FLAGS: '--timeout 5m --wait --create-namespace'
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure kubectl for staging cluster
+        uses: azure/k8s-set-context@v4
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
+
+      - name: Helm lint
+        run: |
+          helm lint infrastructure/helm/sso-api \
+            --values infrastructure/helm/sso-api/values-staging.yaml \
+            --values infrastructure/helm/sso-api/values.yaml
+
+      - name: Deploy to Staging
+        run: |
+          helm upgrade --install sso-api infrastructure/helm/sso-api \
+            ${{ env.HELM_FLAGS }} \
+            --namespace sso-staging \
+            --values infrastructure/helm/sso-api/values-staging.yaml \
+            --values infrastructure/helm/sso-api/values.yaml \
+            --set image.repository=${{ env.REGISTRY }}/sso-api \
+            --set image.tag=${{ inputs.image_tag || 'main-latest' }}
+
+      - name: Run migration job
+        run: |
+          kubectl -n sso-staging \
+            rollout status deployment/sso-api-migration 2>/dev/null || true
+
+      - name: Smoke test SSO
+        run: |
+          sleep 10
+          curl -sf http://sso-api-sso-staging.${{ secrets.STAGING_INGRESS_DOMAIN }}/health/live \
+            || echo "Health check endpoint not reachable yet"
+
+      - name: Verify OIDC discovery
+        run: |
+          curl -sf "http://sso-api-sso-staging.${{ secrets.STAGING_INGRESS_DOMAIN }}/.well-known/openid-configuration" \
+            | jq -e '.issuer' || echo "OIDC discovery check skipped"

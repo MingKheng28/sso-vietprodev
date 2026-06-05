@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Xác nhận quyền truy cập - SSO VietProDev</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/login.css">
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="card">
+      <div class="card-header">
+        <img src="/public/assets/logo.svg" alt="SSO VietProDev" class="card-logo" onerror="this.style.display='none'">
+        <div class="card-logo-text">
+          <h1>Xác nhận quyền truy cập</h1>
+        </div>
+        <p class="card-subtitle">Ứng dụng yêu cầu quyền truy cập tài khoản của bạn</p>
+      </div>
+
+      {{#if client}}
+      <div style="text-align:center; margin-bottom:24px;">
+        <div class="client-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          {{client}}
+        </div>
+      </div>
+      {{/if}}
+
+      <p style="font-size:14px; color:var(--sso-gray-700); margin-bottom:16px; line-height:1.6;">
+        Ứng dụng này sẽ có thể truy cập các thông tin sau:
+      </p>
+
+      <ul class="scope-list">
+        <li>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          <div class="scope-content">
+            <strong>openid</strong>
+            <span>Xác thực qua OpenID Connect</span>
+          </div>
+        </li>
+        <li>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div class="scope-content">
+            <strong>profile</strong>
+            <span>Tên và thông tin cá nhân cơ bản</span>
+          </div>
+        </li>
+        <li>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <div class="scope-content">
+            <strong>email</strong>
+            <span>Địa chỉ email của bạn</span>
+          </div>
+        </li>
+        <li>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <div class="scope-content">
+            <strong>offline_access</strong>
+            <span>Duy trì đăng nhập khi hết phiên</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="btn-group">
+        <form method="POST" action="/oidc/interaction/{{uid}}/confirm" style="flex:1;">
+          <input type="hidden" name="_csrf" value="{{csrfToken}}">
+          <button type="submit" class="btn btn-primary">Cho phép</button>
+        </form>
+        <form method="POST" action="/oidc/interaction/{{uid}}/cancel" style="flex:1;">
+          <input type="hidden" name="_csrf" value="{{csrfToken}}">
+          <button type="submit" class="btn btn-secondary">Từ chối</button>
+        </form>
+      </div>
+
+      <div class="card-footer">
+        Bạn có thể quản lý quyền truy cập tại trang cài đặt tài khoản SSO.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

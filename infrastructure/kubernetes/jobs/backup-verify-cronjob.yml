@@ -1,0 +1,4 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata: { name: sso-backup-verify }
+spec: { schedule: '*/5 * * * *', jobTemplate: { spec: { template: { spec: { restartPolicy: OnFailure, containers: [{ name: verify, image: sso-api:0.1.0, command: ['node','-e','console.log("backup verify placeholder")'] }] } } } } }

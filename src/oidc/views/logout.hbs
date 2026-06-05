@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Đăng xuất - SSO VietProDev</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/login.css">
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="card">
+      <div class="card-header">
+        <img src="/public/assets/logo.svg" alt="SSO VietProDev" class="card-logo" onerror="this.style.display='none'">
+        <div class="card-logo-text">
+          <h1>Đăng xuất</h1>
+        </div>
+        <p class="card-subtitle">Phiên SSO đã kết thúc thành công.</p>
+      </div>
+
+      <div class="alert alert-success">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>Phiên đăng nhập SSO đã được kết thúc. Các ứng dụng khác có thể yêu cầu đăng nhập lại.</span>
+      </div>
+
+      {{#if post_logout_redirect_uri}}
+      <a href="{{post_logout_redirect_uri}}" class="btn btn-primary">Quay lại ứng dụng</a>
+      {{else}}
+      <a href="/" class="btn btn-primary">Quay lại trang chủ</a>
+      {{/if}}
+
+      <div class="link-row" style="margin-top:12px;">
+        <a href="/oidc/interaction/login">Đăng nhập lại</a>
+      </div>
+
+      <div class="card-footer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Chú ý: Đăng xuất SSO chỉ kết thúc phiên tại đây. Các ứng dụng khác có phiên riêng và có thể cần đăng xuất riêng.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

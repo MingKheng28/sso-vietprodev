@@ -1,0 +1,8 @@
+{
+  "passwordHash": "argon2id",
+  "accessTokenTtlSeconds": 900,
+  "refreshTokenTtlSeconds": 2592000,
+  "loginRateLimit": { "ttlSeconds": 60, "limit": 10 },
+  "adminRateLimit": { "ttlSeconds": 60, "limit": 60 },
+  "cookie": { "httpOnly": true, "sameSite": "lax", "secureInProduction": true }
+}

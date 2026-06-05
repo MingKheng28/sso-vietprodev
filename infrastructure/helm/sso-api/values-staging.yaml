@@ -1,0 +1,7 @@
+env:
+  NODE_ENV: staging
+  COOKIE_SECURE: 'false'
+ingress:
+  host: sso-staging.example.com
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
