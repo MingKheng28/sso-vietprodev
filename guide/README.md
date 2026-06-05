@@ -1,71 +1,90 @@
-# Guide vận hành dự án SSO
+# Hướng dẫn vận hành SSO VietProDev
 
-Đọc theo thứ tự local, pgAdmin4, MongoDB, env, OIDC client, onboarding project, HA, Helm, monitoring, CI/CD, security và incident response.
+## Mục lục
 
-## Bắt đầu nhanh cho người mới
+1. [Bắt đầu nhanh](#1-bắt-đầu-nhanh)
+2. [Thứ tự đọc khuyến nghị](#2-thứ-tự-đọc-khuyến-nghị)
+3. [Lưu ý về Project A/B thật](#3-lưu-ý-về-project-ab-thật)
+4. [Vai trò và hướng đọc](#4-vai-trò-và-hướng-đọc)
 
-Nếu bạn chưa biết cài gì, setup thế nào, bật dự án ra sao, hãy đọc file này trước:
+---
 
-- [00-setup-and-run-local-full.md](00-setup-and-run-local-full.md)
+## 1. Bắt đầu nhanh
 
-File này hướng dẫn chi tiết từng bước:
+Đọc [00-setup-and-run-local-full.md](00-setup-and-run-local-full.md) nếu bạn chưa từng mở dự án này. File đó hướng dẫn chi tiết từ cài phần mềm, chạy local, kiểm tra health và test OIDC login.
 
-1. Cài Node.js.
-2. Cài Docker Desktop.
-3. Cài Git, VS Code, pgAdmin4, MongoDB Compass.
-4. Tạo `.env`.
-5. Bật PostgreSQL và MongoDB local.
-6. Chạy migration, seed, generate JWKS.
-7. Start SSO API.
-8. Kiểm tra health, OIDC discovery, metrics.
-9. Xử lý các lỗi thường gặp.
+Tóm tắt nhanh nếu đã quen:
 
-## Lưu ý Project A/B thật
+```bash
+npm install
+copy .env.example .env
+# Sửa SSO_LOGIN_PRIMARY_URL dùng port 5432
+docker compose -f docker-compose.local.yml up -d
+npm run migration:run
+npm run seed
+npm run jwks:generate
+npm run start:dev
+```
 
-Project A và Project B hiện là hệ thống thật của công ty và chưa được phép sửa code. Vì vậy các guide OIDC/onboarding hiện phải hiểu là chuẩn bị tích hợp/readiness, chưa phải go-live SSO vào Project A/B.
+Kiểm tra:
 
-Chiến lược chi tiết nằm ở:
+```
+http://localhost:3000/health/live
+http://localhost:3000/.well-known/openid-configuration
+http://localhost:3000/metrics
+```
 
-- [../docs/project-ab-integration-strategy.md](../docs/project-ab-integration-strategy.md)
+---
 
-## Thứ tự đọc khuyến nghị
+## 2. Thứ tự đọc khuyến nghị
 
-1. [00-setup-and-run-local-full.md](00-setup-and-run-local-full.md) - setup và chạy local từ đầu.
-2. [01-local-setup.md](01-local-setup.md) - tóm tắt setup local.
-3. [02-pgadmin4-postgresql-setup.md](02-pgadmin4-postgresql-setup.md) - thao tác PostgreSQL bằng pgAdmin4.
-4. [03-mongodb-compass-cluster-setup.md](03-mongodb-compass-cluster-setup.md) - thao tác MongoDB bằng Compass.
-5. [04-env-and-connection-strings.md](04-env-and-connection-strings.md) - cấu hình `.env` và connection string.
-6. [05-oidc-client-registration.md](05-oidc-client-registration.md) - đăng ký OAuth2/OIDC client.
-7. [06-project-db-onboarding.md](06-project-db-onboarding.md) - thêm project mới vào SSO.
-8. [13-demo-backend-multi-project-sso.md](13-demo-backend-multi-project-sso.md) - test 2 backend demo mô phỏng Project A/B và luồng SSO nhiều dự án.
-9. [07-patroni-etcd-haproxy-pgbouncer.md](07-patroni-etcd-haproxy-pgbouncer.md) - PostgreSQL HA production.
-10. [08-kubernetes-helm-deployment.md](08-kubernetes-helm-deployment.md) - deploy Kubernetes/Helm.
-11. [09-monitoring-prometheus-grafana-alertmanager.md](09-monitoring-prometheus-grafana-alertmanager.md) - monitoring/alerting.
-12. [10-cicd-release-rollback.md](10-cicd-release-rollback.md) - CI/CD, release, rollback.
-13. [11-security-production-checklist.md](11-security-production-checklist.md) - checklist bảo mật production.
-14. [12-incident-response-runbook.md](12-incident-response-runbook.md) - xử lý sự cố.
+### Local setup
 
-## Vai trò
+| Bước | File | Mục đích |
+|-------|------|-----------|
+| 1 | [00-setup-and-run-local-full.md](00-setup-and-run-local-full.md) | Setup toàn diện từ đầu |
+| 2 | [01-local-setup.md](01-local-setup.md) | Tóm tắt setup local |
+| 3 | [02-pgadmin4-postgresql-setup.md](02-pgadmin4-postgresql-setup.md) | Thao tác PostgreSQL bằng pgAdmin4 |
+| 4 | [03-mongodb-compass-cluster-setup.md](03-mongodb-compass-cluster-setup.md) | Thao tác MongoDB bằng Compass |
+| 5 | [04-env-and-connection-strings.md](04-env-and-connection-strings.md) | Cấu hình `.env` và connection string |
 
-- Developer: đọc guide local, env, OIDC client, coding rules.
-- DevOps: đọc guide HA, Kubernetes/Helm, monitoring, CI/CD, security.
-- Admin hệ thống: đọc guide pgAdmin4, MongoDB, onboarding project, incident response.
+### OIDC & Integration
 
-## Guide demo backend multi-project SSO
+| Bước | File | Mục đích |
+|-------|------|-----------|
+| 6 | [05-oidc-client-registration.md](05-oidc-client-registration.md) | Đăng ký OAuth2/OIDC client |
+| 7 | [06-project-db-onboarding.md](06-project-db-onboarding.md) | Thêm project mới vào SSO |
+| 8 | [13-demo-backend-multi-project-sso.md](13-demo-backend-multi-project-sso.md) | Test demo backend multi-project SSO |
+| 9 | [14-demo-db-schema-sql.md](14-demo-db-schema-sql.md) | Schema SQL cho demo DB |
 
-Trước khi sửa Project A/B thật, giai đoạn tiếp theo là tạo 2 backend demo mô phỏng Project A/B thật để chứng minh SSO hoạt động cho nhiều dự án.
+### Production & Operations
 
-Đọc thêm:
+| Bước | File | Mục đích |
+|-------|------|-----------|
+| 10 | [07-patroni-etcd-haproxy-pgbouncer.md](07-patroni-etcd-haproxy-pgbouncer.md) | PostgreSQL HA production |
+| 11 | [08-kubernetes-helm-deployment.md](08-kubernetes-helm-deployment.md) | Deploy Kubernetes/Helm |
+| 12 | [09-monitoring-prometheus-grafana-alertmanager.md](09-monitoring-prometheus-grafana-alertmanager.md) | Monitoring/alerting |
+| 13 | [10-cicd-release-rollback.md](10-cicd-release-rollback.md) | CI/CD, release, rollback |
+| 14 | [11-security-production-checklist.md](11-security-production-checklist.md) | Checklist bảo mật production |
+| 15 | [12-incident-response-runbook.md](12-incident-response-runbook.md) | Xử lý sự cố |
 
-- [../plans/demo-backend-multi-project-sso-plan.md](../plans/demo-backend-multi-project-sso-plan.md) - kế hoạch demo backend multi-project SSO.
-- [13-demo-backend-multi-project-sso.md](13-demo-backend-multi-project-sso.md) - guide test Demo A/Demo B sau khi coding.
+---
 
-## Nguyên tắc chung
+## 3. Lưu ý về Project A/B thật
 
-- Không commit secret thật.
-- Không commit file `.env`.
-- Không dùng Docker tag `latest` cho production.
-- Không deploy production thủ công ngoài CI/CD pipeline.
-- Mọi project mới phải có OIDC client và connection config rõ ràng.
-- Với Project A/B hiện tại, không ghi session/token/cookie vào project khi chưa có phê duyệt bảo mật.
-- Demo backend được phép mô phỏng schema/session của Project A/B nhưng không được dùng secret hoặc DB thật khi chưa có phê duyệt.
+Project A (`https://vcci-news.vercel.app/`) và Project B (`https://sied-dev.meucorp.com/`) là hệ thống thật của công ty, **chưa được phép sửa code**. Vì vậy:
+
+- Các guide OIDC/onboarding hiện là bước **chuẩn bị tích hợp / readiness**, chưa phải go-live SSO vào Project A/B thật.
+- Demo backend (Demo A/B) trong `demo-projects/` mô phỏng Project A/B để test SSO flow mà không ảnh hưởng hệ thống thật.
+- Chiến lược chi tiết: xem [plans/sso-project-plan.md](../plans/sso-project-plan.md) sections 1.1–1.4.
+
+---
+
+## 4. Vai trò và hướng đọc
+
+| Vai trò | Đọc |
+|---------|------|
+| Developer mới | `00-setup-and-run-local-full.md` → demo SSO (`13-demo...md`) → coding rules |
+| Developer | Setup local, OIDC client, demo backend, coding rules |
+| DevOps | HA (`07-...`), Kubernetes (`08-...`), monitoring (`09-...`), CI/CD (`10-...`), security (`11-...`) |
+| Admin | pgAdmin4 (`02-...`), MongoDB (`03-...`), onboarding (`06-...`), incident response (`12-...`) |

@@ -1,20 +1,31 @@
 node_modules
 dist
 coverage
+
+# Environment variables — never commit secrets
 .env
 .env.*
-!.env.example
 
 # Secrets directory
 secrets/
 !secrets/
 !secrets/.gitkeep
 !secrets/README.md
-# Allow public JWKS JSON in git (dev only - commit public keys, never private)
+# Allow public JWKS JSON in git (dev only — commit public keys, never private)
 !secrets/oidc-jwks.json
 
 npm-debug.log*
 .DS_Store
 
-# CodeGraph - local knowledge graph index (100% local, per-machine)
+# CodeGraph — local knowledge graph index (per-machine, never share)
 .codegraph/
+
+# Cursor IDE — per-user workspace settings, no cross-machine value
+.agents/
+.cursor/
+
+# Documentation, guides, and internal notes — not part of the product
+docs/
+
+# Husky hooks
+.husky/_
